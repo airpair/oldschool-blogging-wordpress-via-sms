@@ -152,14 +152,10 @@ In all, my updates travelled:
 
 ![First SMS Message on WordPress.com](https://s3-us-west-2.amazonaws.com/6675d06c-ea96-49d2-8788-c5bc5129fb4a/first_message.png)
 
-It was a _lot_ of engineering to do something very simple - send a message to my friends to let them know I was OK.
+It was a _lot_ of engineering to do something very simple - recreate the essence of a private Twitter feed.
 
 ## Looking Forward...
 
-About 10 years ago, integrating a website with an SMS gateway was technically difficult costly, and legally complicated. You needed to have a partnership with an actual phone company and, often, any numbers you had available for programmatic use had to serve double-duty as either a phone or a fax line.
+Today, Nexmo is just one of _many_ SMS gateway providers that presents an easy-to-consume API for developers. Integrating these gateways with WordPress-powered website is fairly straight forward and, as WordPress grows beyond powering "just blogs," incredibly powerful.
 
-In short: it was a pain.
-
-Today, though, Nexmo and Twilio are leading a pack of _multiple_ gateway providers that present developers with easy-to-use APIs for service integration. One tool might ingest SMS messages from customers reviewing products, displaying those reviews on a site. Another tool my generate _outbound_ messages intended to alert customers to events on a website (payments due, meeting reminders, comment notifications, etc).
-
-The challenge today isn't in partnering with a gateway provider, it's in keeping your imagination from running wild as you start to work on a project.
+The challenge today isn't in marrying SMS with CMS platforms like WordPress, it's in keeping your imagination from running wild as you start to work on a project.
