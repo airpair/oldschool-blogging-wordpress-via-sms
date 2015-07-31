@@ -20,7 +20,7 @@ To remotely publish my articles, I needed two components:
 
 The service was the easiest part. I opened an account with [Nexmo](https://www.nexmo.com), a newer SMS gateway at the time. Nexmo provided me with a phone number in Sweden I could easily text from Haiti. It also took any messages received from my new number and converted them to a web request of whatever server I wanted.
 
-A simple message from `1.555.555.5555` with the text "Hello world!" would be converted to a GET request to `http://mysite.com?msisdn=15555555555&to=[my number]&messageId=000000FFFB0356D1&text=Hello+world!&type=text&message-timestamp=2015-07-30+20%3A38%3A23`.
+A simple message from `1.555.555.5555` with the text "Hello world!" [would be converted to a GET request](https://docs.nexmo.com/index.php/sms-api/handle-inbound-message) to `http://mysite.com?msisdn=15555555555&to=[my number]&messageId=000000FFFB0356D1&text=Hello+world!&type=text&message-timestamp=2015-07-30+20%3A38%3A23`.
 
 Nexmo did all of the heavy lifting for me. It logs the message as being received, assigns a unique identifier to it, and dispatches a GET to the server of my choice.
 
@@ -54,45 +54,71 @@ Any requests sent from Nexmo itself to `http://mysite.com/nexmo` will automatica
 
 ### XML-RPC
 
-## The Final Application
+XML-RPC is one of the ugliest API implementations in the world; it's also one of the most reliable. Through XML-RPC you can control nearly every aspect of a WordPress blog - creating, editing, or deleting content, updating settings, you name it.
 
-The application, while simple in its end goal, was comprised of multiple moving parts.
+To create a post in WordPress over XML-RPC, you POST an XML document to `http://mysite.com/xmlrpc.php`. The document details the method you want invoked and the data you want to invoke it with.
 
-First, I invested in an inexpensive, pre-paid internation phone with which I could send SMS messages while I was out. 
+This XML document would, for example, create a basic "Hello World!" post in the default category on a blog:
 
-Second, I used Nexmo to configure a phone number in Sweden so I could retrieve and interact with any messages programmatically.
+```xml
+<?xml version="1.0"?>
+<methodCall>
+  <methodName>wp.newPost</methodName>
+  <params>
+    <param>
+      <value><int>0</int></value>
+      <value><string>username</string></value>
+      <value><string>password</string></value>
+      <value>
+        <struct>
+          <member>
+            <name>post_status</name>
+            <value><string>publish</string></value>
+          </member>
+          <member>
+            <name>post_title</name>
+            <value><string>Hello World!</string></value>
+          </member>
+          <member>
+            <name>post_content</name>
+            <value><string>This is some post content</string></value>
+          </member>
+        </struct>
+      </value>
+    </param>
+  </params>
+</methodCall>
+```
 
-Unfortunately, I couldn't push data _directly_ from Nexmo to WordPress.com. Instead, I wrote a quick WordPress plugin on a server I managed in Toronto that would intercept the requests from Nexmo and convert any messages into a format appropriate for WordPress.
+It's not very pretty and would be a mess to build manually within _any_ coding system. Luckily, XML-RPC is built into WordPress, both in terms of a _server_ and as a _client_.
 
-SMS messages sent from my phone to Nexmo [were turned into GET requests](https://docs.nexmo.com/index.php/sms-api/handle-inbound-message) populating, among other fields, a `text` query argument. All I had to do was listen for and handle any GETs that appeared to come from Nexmo.
+WordPress natively understands this XML document, will parse it, validate the arguments, and generate a post in the database as a result. Even better, WordPress includes a native XML-RPC client for _generating_ these kinds of messages without giving you a headache.
+
+When our WordPress site sees the Nexmo flag above, we can parse the other information included in the `$_REQUEST` array and generate an XML-RPC post to the WordPress.com site where we want the content to live.
+
+Another action call, hooking in to WordPress' `template_redirect` hook, allows us to parse and dispatch the message _before_ WordPress loads much of our theme or template files. It's lightweight and effective:
 
 ```php
-/**
- * Enable a /nexmopost endpoint on the site. This means any requests for
- * http://site.url/nexmopost will set the `nexmopost` query arg to `true`
- * within WordPress.
- */
-function add_nexmo_endpoint() {
-	add_rewrite_endpoint( 'nexmopost', EP_ALL );
-}
-add_action( 'init', 'add_nexmo_endpoint' );
-
 /**
  * If the `nexmopost` query arg is set, don't display a regular template
  * file. Instead, sanitize the content and pass it along to our other site.
  */
 function nexmo_template_redirect() {
     global $wp_query;
-    if ( ! isset( $wp_query->query_vars['nexmopost'] ) ) return;
+    if ( ! isset( $wp_query->query_vars['nexmo'] ) ) {
+        return;
+    }
     
     $message_text = isset( $_REQUEST['text'] ) ? $_REQUEST['text'] : '';
     
     // Run our sanitization filters to make sure it's an OK request
 	$message_text = apply_filters( 'content_save_pre', $message_text );
 	
-	if ( empty( $message_text ) ) die();
+	if ( empty( $message_text ) ) {
+	    die();
+	}
 	
-	$clien = new WP_HTTP_IXR_CLIENT( 'http://site.url/xmlrpc.php' );
+	$client = new WP_HTTP_IXR_Client( 'http://site.url/xmlrpc.php' );
 	$result = $client->query( 'wp.newPost', array(
 	    0,
 	    'username',
@@ -108,9 +134,14 @@ function nexmo_template_redirect() {
 add_action( 'template_redirect', 'nexmo_template_redirect' );
 ```
 
-This plugin stored a copy of every message it received in the WordPress database. Then it used the ubiquitous and reliable XML-RPC interface built into WordPress to push messages across the wire to my free blog at WordPress.com.
+The [`WP_HTTP_IXR_Client` class](https://developer.wordpress.org/reference/classes/wp_http_ixr_client/) is a handy abstraction of the XML-RPC system built within WordPress. We use the class to connect to a remote XML-RPC server, and then query it by passing a method name and an array of arguments.
+The first argument is (almost) always 0. This was meant to be a network identifier, but hasn't actually been implemented yet in any of WordPress' RPC calls.
 
-![First SMS Message on WordPress.com](https://s3-us-west-2.amazonaws.com/6675d06c-ea96-49d2-8788-c5bc5129fb4a/first_message.png)
+Authenticated requests then take a WordPress username and password as their next arguments. **Note** that these are passed over the wire in plain text, so you should only really be using this on a server with proper SSL support.
+
+The full documentation for the API and all available commands [is avaialable on the Codex](https://codex.wordpress.org/XML-RPC_WordPress_API).
+
+## In Production
 
 In all, my updates travelled:
 - From a feature phone in Haiti
@@ -118,6 +149,8 @@ In all, my updates travelled:
 - To a VPS in Canada
 - To a data center in the US
 - To my Facebook wall so everyone could play along
+
+![First SMS Message on WordPress.com](https://s3-us-west-2.amazonaws.com/6675d06c-ea96-49d2-8788-c5bc5129fb4a/first_message.png)
 
 It was a _lot_ of engineering to do something very simple - send a message to my friends to let them know I was OK.
 
