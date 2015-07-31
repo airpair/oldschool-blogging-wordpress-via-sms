@@ -12,17 +12,29 @@ My first proof-of-concept prototype used an [IFTTT](https://ifttt.com/) recipe t
 
 I just knew it wasn't sustainable as Twitter was killing the IFTTT integration a few days before I left. Still, it was proof that a service could consume SMS messages and convert them to WordPress blog posts.
 
-## Coding Against SMS Gateways
+## Beyond a Prototype
 
-At the time, there were only two real possibilities. 
+To remotely publish my articles, I needed two components:
+- A service to receive SMS notifications from my international phone
+- A WordPress plugin to convert these notifications into blog posts
 
-[Twilio](https://www.twilio.com/) was the big player in the industry and was being used for everything from SMS-based two factor authentication to medical appointment reminder services. It featured a rich, REST-based API that was remarkably easy to code against.
+The service was the easiest part. I opened an account with [Nexmo](https://www.nexmo.com), a newer SMS gateway at the time. Nexmo provided me with a phone number in Sweden I could easily text from Haiti. It also took any messages received from my new number and converted them to a web request of whatever server I wanted.
 
-I started using Twilio for a basic proof-of-concept app that allowed me to pipe incoming SMS messages through to another service. Unfortunately, the international support Twilio provided at the time left much to be desired - in short, I couldn't use the service from a Haitian phone nework.
+A simple message from `1.555.555.5555` with the text "Hello world!" would be converted to a GET request to `http://mysite.com?msisdn=15555555555&to=[my number]&messageId=000000FFFB0356D1&text=Hello+world!&type=text&message-timestamp=2015-07-30+20%3A38%3A23`.
 
-Instead, I turned to a newer player on the scene, [Nexmo](https://www.nexmo.com/). Nexmo had just about the same functionality as Twilio, only it was more pared down to support SMS messaging. It _also_ maintained better international support.
+Nexmo did all of the heavy lifting for me. It logs the message as being received, assigns a unique identifier to it, and dispatches a GET to the server of my choice.
 
-Though I'd be forced to work with a query-variable-based API, I could route messages from Haiti through Sweden to any server in the world.
+All I had to do at this point was get WordPress to understand the message.
+
+## WordPress, WordPress.com, and Plugins
+
+[WordPress.com](https://wordpress.com), the free, _hosted_ blogging platform, doesn't support custom plugins. To get my posts from Nexmo into my free blog, I had to set up a _second_ WordPress site as an intermediary.
+
+This secondary site lived on a server in Canada and did little more than parse incoming Nexmo requests and convert them into outgoing XML-RPC routines.
+
+### Custom Plugin
+
+### XML-RPC
 
 ## The Final Application
 
