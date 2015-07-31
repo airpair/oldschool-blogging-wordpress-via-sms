@@ -1,44 +1,18 @@
-In late 2012, I was presented with an amazing and unique opportunity: I was invited on a trip to the island nation of Haiti. The trip came entirely out of the blue and, due to my schedule and finances, seemed to be an impossible thing. 
+In late 2012, I was presented with an impromptu opportunity to visit the island nation of Haiti. The trip was an exciting chance to see the world, and I wanted to keep my friends and family updated while I traveled.
 
-At least, the voice in my head told me I couldn’t do it. And the easiest way to get me to do something is to tell me I can’t.
-
-Within hours of receiving the invitation, I was begining to make all of the other required preparations for the trip. Being so spontaneous was exciting, but also presented more than a few challenges.
-
-**How would I get time away from work?** I happen to have an amazing and understanding boss who not only granted me the time off immediately, but helped me to negotiate client concerns about my absence.
-
-**How would I possibly _pay_ for such an improptu trip?** I set up [a crowdfunding campaign](http://igg.me/p/204007/x/389939) to garner support from my family and friends.
-
-**How would I keep everyone back home up-to-date on my travel?** I needed a quick, reliable way to push out information to several people at once. My day job involves building [WordPress](http://wordpress.org), so the first thing I did was set up a blog on [WordPress.com](http://wordpress.com). I also integrated it with Facebook so none of my friends had to go hunting for a URL.
+I needed a quick, reliable way to push out information to several people at once. My day job involves building [WordPress](http://wordpress.org), so the first thing I did was set up a blog on [WordPress.com](http://wordpress.com). I also integrated it with Facebook so none of my friends had to go hunting for a URL.
 
 But using a website to dispense information raised another problem: **How would I keep things updated when traveling in the mountains of Haiti?**
 
-## Brainstorming
+## Rapid Prototyping
 
-I had been an avid Twitter user in the days when its primary interface was still sending SMS messages to 40404. It was a good enough system for my less-than-smart college phone; I figured it might be a good solution for Haiti, too!
+I had been an avid Twitter user in the days when its primary interface was SMS messages to and from 40404. It was a good enough system for my less-than-smart college phone; I figured it might be a good solution for Haiti, too!
 
-Even without high-speed connections or ubiquitous wireless networks, I knew at least some phones would function just fine on the road. The problem became less of "how do I send a message" and more a question of "how do I get the message to my blog?"
+My first proof-of-concept prototype used an [IFTTT](https://ifttt.com/) recipe to automatically push content from Twitter into my blog on WordPress.com. It worked like a dream!
 
-## If This Then ... Prototype
+I just knew it wasn't sustainable as Twitter was killing the IFTTT integration a few days before I left. Still, it was proof that a service could consume SMS messages and convert them to WordPress blog posts.
 
-I looked into [IFTTT](https://ifttt.com/) to find an adequate way to push any of my tweets into a WordPress blog I’d set up explicitly for the trip. I had everything set up and working, and was ready to go.
-
-Then Twitter shut down the IFTTT integration.
-
-Twitter had begun locking down access to their API and, apparently, using their service as an intermediary between an international phone and a WordPress blog wasn’t on the list of “acceptable services.” I was left with a bunch of hard work that had gone nowhere.
-
-I took a second look at WordPress.com, though, and discovered their hosted platform also featured a free blog-via-SMS service!
-
-Unfortunately, this feature supported only US phone numbers and was being phased out entirely that year. I used the service successfully for a few test messages, but if I would be unable to post remotely, it would be entirely useless to me.
-
-Without Twitter, and without a native WordPress.com implementation, I was left high and dry without a solution.
-
-Except I still had an idea.
-
-One of the first coding challenges I faced when learning Node was to build a Twitter clone backed by a Redis database. We built the tool in a few hours after lunch; if cloning Twitter in code was that easy, there was no reason I couldn’t build the entire SMS-to-blog interface on my own!
-
-This meant I didn't need a _service_ to host my messaging, but an SMS gateway to route traffic from a phone number to a custom application.
-
-## SMS Gateways
+## Coding Against SMS Gateways
 
 At the time, there were only two real possibilities. 
 
