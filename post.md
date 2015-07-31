@@ -34,6 +34,24 @@ This secondary site lived on a server in Canada and did little more than parse i
 
 ### Custom Plugin
 
+WordPress plugins empower developers to do whatever they want on the platform. The action/filter hook system lets you set up custom code that fires in specific places and completely breaks the normal flow of WordPress execution.
+
+Natively, WordPress allows developers to register custom endpoints - strings affixed to the end of a URL that trigger the population of custom variables. In this case, I needed the site to listen for any GET requests to a `/nexmo` endpoint and handle them properly.
+
+```php
+/**
+ * Enable a /nexmo endpoint on the site.
+ */
+function add_nexmo_endpoint() {
+	add_rewrite_endpoint( 'nexmo', EP_ALL );
+}
+add_action( 'init', 'add_nexmo_endpoint' );
+```
+
+These three lines of code tell WordPress that, if any URL ends in `/nexmo` to automatically populate the value of `$_REQUEST['nexmo']` with `1`. This flag allows us to hook in before WordPress generates any templates or runs any other code.
+
+Any requests sent from Nexmo itself to `http://mysite.com/nexmo` will automatically trigger this code and be intercepted later down the chain.
+
 ### XML-RPC
 
 ## The Final Application
